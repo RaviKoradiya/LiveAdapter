@@ -2,24 +2,33 @@ package com.ravikoradiya.liveadapter
 
 import android.arch.lifecycle.LiveData
 import android.databinding.DataBindingUtil
+import android.databinding.ObservableList
 import android.databinding.OnRebindCallback
 import android.databinding.ViewDataBinding
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 
-class LiveAdapter<T : Any>(
-    private val data: LiveData<ArrayList<T>>,
+class LiveAdapter<T : Any> private constructor(
+    private val data: LiveData<ArrayList<T>>?,
+    private val list: List<Any>?,
     private val variable: Int? = null,
     stableIds: Boolean = false
 ) : RecyclerView.Adapter<Holder<ViewDataBinding>>() {
 
-    constructor(data: LiveData<ArrayList<T>>) : this(data, null, false)
-    constructor(data: LiveData<ArrayList<T>>, variable: Int) : this(data, variable, false)
-    constructor(data: LiveData<ArrayList<T>>, stableIds: Boolean) : this(data, null, stableIds)
+    constructor(list: List<Any>?) : this(null, list, null, false)
+    constructor(list: List<Any>?, variable: Int) : this(null, list, variable, false)
+    constructor(list: List<Any>?, stableIds: Boolean) : this(null, list, null, stableIds)
+    constructor(list: List<Any>?, variable: Int, stableIds: Boolean) : this(null, list, variable, stableIds)
+
+    constructor(data: LiveData<ArrayList<T>>) : this(data, null, null, false)
+    constructor(data: LiveData<ArrayList<T>>, variable: Int) : this(data, null, variable, false)
+    constructor(data: LiveData<ArrayList<T>>, stableIds: Boolean) : this(data, null, null, stableIds)
+    constructor(data: LiveData<ArrayList<T>>, variable: Int, stableIds: Boolean) : this(data, null, variable, stableIds)
 
     private val DATA_INVALIDATION = Any()
-    private val callback: LiveListCallback<ArrayList<T>> = LiveListCallback(this)
+    private val liveListCallback: LiveListCallback<ArrayList<T>> = LiveListCallback(this)
+    private val observableListCallback = ObservableListCallback(this)
     private var recyclerView: RecyclerView? = null
     private lateinit var inflater: LayoutInflater
 
@@ -90,7 +99,7 @@ class LiveAdapter<T : Any>(
 
     override fun onBindViewHolder(holder: Holder<ViewDataBinding>, position: Int) {
         val type = getType(position)!!
-        holder.binding.setVariable(getVariable(type), data.value?.get(position))
+        holder.binding.setVariable(getVariable(type), data?.value?.get(position) ?: list?.get(position))
         holder.binding.executePendingBindings()
         @Suppress("UNCHECKED_CAST")
         if (type is AbsType<*>) {
@@ -111,7 +120,7 @@ class LiveAdapter<T : Any>(
 
     override fun onViewRecycled(holder: Holder<ViewDataBinding>) {
         val position = holder.adapterPosition
-        if (position != RecyclerView.NO_POSITION && position < data.value?.size ?: 0) {
+        if (position != RecyclerView.NO_POSITION && position < ((data?.value?.size) ?: (list?.size ?: 0))) {
             val type = getType(position)!!
             if (type is AbsType<*>) {
                 @Suppress("UNCHECKED_CAST")
@@ -122,7 +131,7 @@ class LiveAdapter<T : Any>(
 
     override fun getItemId(position: Int): Long {
         if (hasStableIds()) {
-            val item = data.value?.get(position) ?: Any()
+            val item = ((data?.value?.get(position)) ?: (list?.get(position) ?: Any()))
             if (item is StableId) {
                 return item.stableId
             } else {
@@ -133,12 +142,14 @@ class LiveAdapter<T : Any>(
         }
     }
 
-    override fun getItemCount() = data.value?.size ?: 0
+    override fun getItemCount() = ((data?.value?.size) ?: (list?.size ?: 0))
 
     override fun onAttachedToRecyclerView(rv: RecyclerView) {
         if (recyclerView == null) {
-            data.observeForever(callback)
-//            list.addOnListChangedCallback(callback)
+            data?.observeForever(liveListCallback)
+
+            if (list is ObservableList?)
+                list?.addOnListChangedCallback(observableListCallback)
         }
         recyclerView = rv
         inflater = LayoutInflater.from(rv.context)
@@ -146,22 +157,29 @@ class LiveAdapter<T : Any>(
 
     override fun onDetachedFromRecyclerView(rv: RecyclerView) {
         if (recyclerView != null) {
-            data.removeObserver(callback)
-//            list.removeOnListChangedCallback(callback)
+            data?.removeObserver(liveListCallback)
+
+            if (list is ObservableList?)
+                list?.removeOnListChangedCallback(observableListCallback)
         }
         recyclerView = null
     }
 
     override fun getItemViewType(position: Int) =
-        layoutHandler?.getItemLayout(data.value?.get(position) ?: Any(), position)
-            ?: typeHandler?.getItemType(data.value?.get(position) ?: Any(), position)?.layout
+        layoutHandler?.getItemLayout((data?.value?.get(position) ?: (list?.get(position) ?: Any())), position)
+            ?: typeHandler?.getItemType(
+                (data?.value?.get(position) ?: (list?.get(position) ?: Any())),
+                position
+            )?.layout
             ?: getType(position)?.layout
             ?: throw RuntimeException(
-                "Invalid object at position $position: ${(data.value?.get(position) ?: Any()).javaClass}"
+                "Invalid object at position $position: ${((data?.value?.get(position) ?: (list?.get(position)
+                    ?: Any()))).javaClass}"
             )
 
-    private fun getType(position: Int) = typeHandler?.getItemType(data.value?.get(position) ?: Any(), position)
-        ?: map[(data.value?.get(position) ?: Any()).javaClass]
+    private fun getType(position: Int) =
+        typeHandler?.getItemType((data?.value?.get(position) ?: (list?.get(position) ?: Any())), position)
+            ?: map[((data?.value?.get(position) ?: (list?.get(position) ?: Any()))).javaClass]
 
     private fun getVariable(type: BaseType) = type.variable
         ?: variable
