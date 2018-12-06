@@ -10,7 +10,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 
 class LiveAdapter private constructor(
-    private val data: LiveData<List<Any>>?,
+    private val data: LiveData<out List<Any>>?,
     private val list: List<Any>?,
     private val variable: Int?,
     private val stableIds: Boolean?
@@ -21,10 +21,10 @@ class LiveAdapter private constructor(
     constructor(list: List<Any>?, stableIds: Boolean) : this(null, list, null, stableIds)
     constructor(list: List<Any>?, variable: Int, stableIds: Boolean) : this(null, list, variable, stableIds)
 
-    constructor(data: LiveData<List<Any>>?) : this(data, null, null, false)
-    constructor(data: LiveData<List<Any>>?, variable: Int) : this(data, null, variable, false)
-    constructor(data: LiveData<List<Any>>?, stableIds: Boolean) : this(data, null, null, stableIds)
-    constructor(data: LiveData<List<Any>>?, variable: Int, stableIds: Boolean) : this(data, null, variable, stableIds)
+    constructor(data: LiveData<out List<Any>>?) : this(data, null, null, false)
+    constructor(data: LiveData<out List<Any>>?, variable: Int) : this(data, null, variable, false)
+    constructor(data: LiveData<out List<Any>>?, stableIds: Boolean) : this(data, null, null, stableIds)
+    constructor(data: LiveData<out List<Any>>?, variable: Int, stableIds: Boolean) : this(data, null, variable, stableIds)
 
     private val DATA_INVALIDATION = Any()
     private val liveListCallback = LiveListCallback(this)

@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
             data.value?.add(MyData("${1 + (data.value?.size ?: 0)}"))
         }
 
-        LiveAdapter(data as LiveData<List<Any>>, BR.data)
+        LiveAdapter(data, BR.data)
             .map<MyData, RowRvDataBinding>(R.layout.row_rv_data)
             .into(mBinding.rvTest)
 
