@@ -1,11 +1,11 @@
 package com.ravikoradiya.liveadapter
 
-import android.arch.lifecycle.LiveData
-import android.databinding.DataBindingUtil
-import android.databinding.ObservableList
-import android.databinding.OnRebindCallback
-import android.databinding.ViewDataBinding
-import android.support.v7.widget.RecyclerView
+import androidx.lifecycle.LiveData
+import androidx.databinding.DataBindingUtil
+import androidx.databinding.ObservableList
+import androidx.databinding.OnRebindCallback
+import androidx.databinding.ViewDataBinding
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 

@@ -1,6 +1,6 @@
 package com.ravikoradiya.liveadapter
 
-import android.support.v7.util.DiffUtil
+import androidx.recyclerview.widget.DiffUtil
 
 class LiveDiffUtils(private val oldList: List<*>, private val newList: List<*>) : DiffUtil.Callback() {
 

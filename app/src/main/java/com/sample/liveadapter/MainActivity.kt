@@ -1,12 +1,12 @@
 package com.sample.liveadapter
 
-import android.arch.lifecycle.MutableLiveData
-import android.databinding.DataBindingUtil
-import android.databinding.ObservableArrayList
+import androidx.lifecycle.MutableLiveData
+import androidx.databinding.DataBindingUtil
+import androidx.databinding.ObservableArrayList
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.ravikoradiya.liveadapter.LiveAdapter
 import com.sample.liveadapter.databinding.ActivityMainBinding
 import com.sample.liveadapter.databinding.RowRvDataBinding
@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         mBinding = DataBindingUtil.setContentView<ActivityMainBinding>(this, R.layout.activity_main)
         mBinding.rvTest.layoutManager = LinearLayoutManager(this)
 
-        /*val data = MutableLiveData<ArrayList<MyData>>()
+        val data = MutableLiveData<ArrayList<MyData>>()
         data.value = ArrayList<MyData>()
         for (i in 0..40) {
             data.value?.add(MyData("${1 + (data.value?.size ?: 0)}"))
@@ -33,13 +33,13 @@ class MainActivity : AppCompatActivity() {
             .into(mBinding.rvTest)
 
         mBinding.rvTest.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
 
                 val layoutManager1 = recyclerView?.layoutManager
                 if (layoutManager1 is LinearLayoutManager) {
                     val lastItem = layoutManager1.findLastVisibleItemPosition()
-                    if (lastItem == recyclerView.adapter.itemCount - 1 && !isLoading) {
+                    if (lastItem == (recyclerView.adapter?.itemCount ?: 0) - 1 && !isLoading) {
                         isLoading = true
                         for (i in 0..9) {
                             val add = data.value
@@ -51,9 +51,9 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-        })*/
+        })
 
-        val data = ObservableArrayList<MyData>()
+        /*val data = ObservableArrayList<MyData>()
 
         for (i in 0..40) {
             data.add(MyData("${1 + data.size}"))
@@ -80,7 +80,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-        })
+        })*/
     }
 
     data class MyData(val text: String)

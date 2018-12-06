@@ -1,10 +1,10 @@
 package com.ravikoradiya.liveadapter
 
-import android.arch.lifecycle.Observer
-import android.databinding.ViewDataBinding
+import androidx.lifecycle.Observer
+import androidx.databinding.ViewDataBinding
 import android.os.Looper
-import android.support.v7.util.DiffUtil
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.RecyclerView
 import java.lang.ref.WeakReference
 
 class LiveListCallback<E : List<*>>(
@@ -18,7 +18,7 @@ class LiveListCallback<E : List<*>>(
         if (this::oldData.isInitialized) {
             val diffCallback = LiveDiffUtils(oldData, t.orEmpty())
             val diffResult = DiffUtil.calculateDiff(diffCallback, true)
-            diffResult.dispatchUpdatesTo(adapter)
+            adapter?.let { diffResult.dispatchUpdatesTo(it) }
         } else {
             adapter?.notifyDataSetChanged()
         }

@@ -1,8 +1,8 @@
 package com.ravikoradiya.liveadapter
 
-import android.databinding.ObservableList
+import androidx.databinding.ObservableList
 import android.os.Looper
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import java.lang.ref.WeakReference
 
 class ObservableListCallback<H : RecyclerView.ViewHolder>(adapter: RecyclerView.Adapter<H>) :
