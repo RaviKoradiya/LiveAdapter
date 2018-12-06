@@ -7,13 +7,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import java.lang.ref.WeakReference
 
-class LiveListCallback<E : List<*>>(
-    adapter: RecyclerView.Adapter<Holder<ViewDataBinding>>
-) : Observer<E?> {
+class LiveListCallback(adapter: RecyclerView.Adapter<Holder<ViewDataBinding>>) :
+    Observer<List<Any>> {
 
     lateinit var oldData: List<*>
 
-    override fun onChanged(t: E?) {
+    override fun onChanged(t: List<Any>?) {
 
         if (this::oldData.isInitialized) {
             val diffCallback = LiveDiffUtils(oldData, t.orEmpty())

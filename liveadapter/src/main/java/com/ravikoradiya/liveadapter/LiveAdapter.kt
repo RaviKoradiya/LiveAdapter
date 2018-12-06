@@ -9,11 +9,11 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 
-class LiveAdapter<T : Any> private constructor(
-    private val data: LiveData<ArrayList<T>>?,
+class LiveAdapter private constructor(
+    private val data: LiveData<List<Any>>?,
     private val list: List<Any>?,
-    private val variable: Int? = null,
-    stableIds: Boolean = false
+    private val variable: Int?,
+    private val stableIds: Boolean?
 ) : RecyclerView.Adapter<Holder<ViewDataBinding>>() {
 
     constructor(list: List<Any>?) : this(null, list, null, false)
@@ -21,13 +21,13 @@ class LiveAdapter<T : Any> private constructor(
     constructor(list: List<Any>?, stableIds: Boolean) : this(null, list, null, stableIds)
     constructor(list: List<Any>?, variable: Int, stableIds: Boolean) : this(null, list, variable, stableIds)
 
-    constructor(data: LiveData<ArrayList<T>>) : this(data, null, null, false)
-    constructor(data: LiveData<ArrayList<T>>, variable: Int) : this(data, null, variable, false)
-    constructor(data: LiveData<ArrayList<T>>, stableIds: Boolean) : this(data, null, null, stableIds)
-    constructor(data: LiveData<ArrayList<T>>, variable: Int, stableIds: Boolean) : this(data, null, variable, stableIds)
+    constructor(data: LiveData<List<Any>>?) : this(data, null, null, false)
+    constructor(data: LiveData<List<Any>>?, variable: Int) : this(data, null, variable, false)
+    constructor(data: LiveData<List<Any>>?, stableIds: Boolean) : this(data, null, null, stableIds)
+    constructor(data: LiveData<List<Any>>?, variable: Int, stableIds: Boolean) : this(data, null, variable, stableIds)
 
     private val DATA_INVALIDATION = Any()
-    private val liveListCallback: LiveListCallback<ArrayList<T>> = LiveListCallback(this)
+    private val liveListCallback = LiveListCallback(this)
     private val observableListCallback = ObservableListCallback(this)
     private var recyclerView: RecyclerView? = null
     private lateinit var inflater: LayoutInflater
@@ -37,7 +37,7 @@ class LiveAdapter<T : Any> private constructor(
     private var typeHandler: TypeHandler? = null
 
     init {
-        setHasStableIds(stableIds)
+        setHasStableIds(stableIds ?: false)
     }
 
     @JvmOverloads

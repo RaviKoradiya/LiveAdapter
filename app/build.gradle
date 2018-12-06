@@ -9,7 +9,7 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.ravikoradiya.liveadapter"
+        applicationId "com.sample.liveadapter"
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
@@ -35,4 +35,6 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.1.0-alpha01'
     implementation "androidx.lifecycle:lifecycle-extensions:2.0.0"
     implementation project(':liveadapter')
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.2'
+    implementation 'com.google.android.material:material:1.0.0-alpha1'
 }
