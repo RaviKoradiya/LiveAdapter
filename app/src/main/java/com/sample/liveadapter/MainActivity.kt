@@ -4,6 +4,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableArrayList
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -26,6 +27,8 @@ class MainActivity : AppCompatActivity() {
         mBinding.switch1.setOnCheckedChangeListener { compoundButton, b ->
             if (b) setLiveData() else setObservableList()
         }
+
+        setLiveData()
 
     }
 
@@ -75,13 +78,13 @@ class MainActivity : AppCompatActivity() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
 
-                val layoutManager1 = recyclerView?.layoutManager
+                val layoutManager1 = recyclerView.layoutManager
                 if (layoutManager1 is LinearLayoutManager) {
                     val lastItem = layoutManager1.findLastVisibleItemPosition()
                     if (lastItem == (recyclerView.adapter?.itemCount ?: 0) - 1 && !isLoading) {
                         isLoading = true
                         for (i in 0..9) {
-                            val add = data.value
+                            val add = data.value?.clone() as ArrayList<MyData>?
                             val randomIndex = Random(System.currentTimeMillis()).nextInt(data.value?.size ?: 0)
                             add?.add(randomIndex, MyData("${1 + (data.value?.size ?: 0)}"))
                             data.value = add
@@ -93,5 +96,5 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    data class MyData(val text: String)
+    data class MyData(var text: String)
 }

@@ -2,10 +2,10 @@ package com.ravikoradiya.liveadapter
 
 import androidx.recyclerview.widget.DiffUtil
 
-class LiveDiffUtils(private val oldList: List<*>, private val newList: List<*>) : DiffUtil.Callback() {
+class LiveDiffUtils(private val oldList: List<Any>, private val newList: List<Any>) : DiffUtil.Callback() {
 
     override fun getOldListSize(): Int {
-        return oldList.size
+        return oldList.size ?: 0
     }
 
     override fun getNewListSize(): Int {
