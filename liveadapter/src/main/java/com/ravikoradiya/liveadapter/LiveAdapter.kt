@@ -1,49 +1,80 @@
 package com.ravikoradiya.liveadapter
 
-import androidx.lifecycle.LiveData
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableList
 import androidx.databinding.OnRebindCallback
 import androidx.databinding.ViewDataBinding
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import android.view.LayoutInflater
-import android.view.ViewGroup
+import com.ravikoradiya.extendedlivedata.ExtendedLiveData
 
 class LiveAdapter private constructor(
-    private val data: LiveData<out List<Any>>?,
+    private val _data: LiveData<out List<Any>>?,
+    private val lifecycleOwner: LifecycleOwner?,
     private val list: List<Any>?,
     private val variable: Int?,
     private val stableIds: Boolean?
 ) : RecyclerView.Adapter<Holder<ViewDataBinding>>() {
 
-    constructor(list: List<Any>?) : this(null, list, null, false)
-    constructor(list: List<Any>?, variable: Int) : this(null, list, variable, false)
-    constructor(list: List<Any>?, stableIds: Boolean) : this(null, list, null, stableIds)
+    constructor(list: List<Any>?) : this(null, null, list, null, false)
+    constructor(list: List<Any>?, variable: Int) : this(null, null, list, variable, false)
+    constructor(list: List<Any>?, stableIds: Boolean) : this(null, null,list, null, stableIds)
     constructor(list: List<Any>?, variable: Int, stableIds: Boolean) : this(
         null,
-        list,
+       null, list,
         variable,
         stableIds
     )
 
-    constructor(data: LiveData<out List<Any>>?) : this(data, null, null, false)
-    constructor(data: LiveData<out List<Any>>?, variable: Int) : this(data, null, variable, false)
-    constructor(data: LiveData<out List<Any>>?, stableIds: Boolean) : this(
+    constructor(data: LiveData<out List<Any>>, lifecycleOwner: LifecycleOwner) : this(
         data,
+        lifecycleOwner,
+        null,
+        null,
+        false
+    )
+
+    constructor(
+        data: LiveData<out List<Any>>, lifecycleOwner: LifecycleOwner, variable: Int
+    ) : this(
+        data,
+        lifecycleOwner,
+        null, variable, false
+
+    )
+
+    constructor(
+        data: LiveData<out List<Any>>, lifecycleOwner: LifecycleOwner, stableIds: Boolean
+    ) : this(
+        data,
+        lifecycleOwner,
         null,
         null,
         stableIds
     )
 
-    constructor(data: LiveData<out List<Any>>?, variable: Int, stableIds: Boolean) : this(
+    constructor(
+        data: LiveData<out List<Any>>,
+        lifecycleOwner: LifecycleOwner,
+        variable: Int,
+        stableIds: Boolean
+    ) : this(
         data,
+        lifecycleOwner,
         null,
         variable,
         stableIds
     )
 
+    private var data: ExtendedLiveData<List<Any>>? = null
     private val DATA_INVALIDATION = Any()
-    private val liveListCallback = LiveListCallback(this)
+    private var diffUtilCallback: DiffUtil.ItemCallback<Any>? = null
+    private val liveListCallback = LiveListCallback(this, diffUtilCallback)
     private val observableListCallback = ObservableListCallback(this)
     private var recyclerView: RecyclerView? = null
     private lateinit var inflater: LayoutInflater
@@ -53,6 +84,12 @@ class LiveAdapter private constructor(
     private var typeHandler: TypeHandler? = null
 
     init {
+        if (_data != null && lifecycleOwner != null) {
+            data = ExtendedLiveData(_data.value.orEmpty())
+            _data.observe(lifecycleOwner, Observer {
+                data?.value = it.map { value -> value }
+            })
+        }
         setHasStableIds(stableIds ?: false)
     }
 
@@ -96,6 +133,8 @@ class LiveAdapter private constructor(
     inline fun type(crossinline f: (Any, Int) -> AbsType<*>?) = handler(object : TypeHandler {
         override fun getItemType(item: Any, position: Int) = f(item, position)
     })
+
+    fun diffUtils(callback: DiffUtil.ItemCallback<Any>) = apply { diffUtilCallback = callback }
 
     fun into(recyclerView: RecyclerView) = apply { recyclerView.adapter = this }
 
@@ -174,13 +213,19 @@ class LiveAdapter private constructor(
         }
     }
 
-    override fun getItemCount() = ((data?.value?.size) ?: (list?.size ?: 0))
+    override fun getItemCount(): Int {
+        return if (data != null && lifecycleOwner != null) {
+            liveListCallback.getItemCount()
+        } else {
+            list?.size ?: 0
+        }
+    }
 
     override fun onAttachedToRecyclerView(rv: RecyclerView) {
         if (recyclerView == null) {
-            data?.observeForever(liveListCallback)
-
-            if (list is ObservableList?)
+            if (data != null && lifecycleOwner != null)
+                data?.observe(lifecycleOwner, liveListCallback)
+            else if (list is ObservableList?)
                 list?.addOnListChangedCallback(observableListCallback)
         }
         recyclerView = rv
@@ -208,10 +253,12 @@ class LiveAdapter private constructor(
             )?.layout
             ?: getType(position)?.layout
             ?: throw RuntimeException(
-                "Invalid object at position $position: ${((data?.value?.get(position) ?: (list?.get(
+                "Invalid object at position $position: ${
+                    ((data?.value?.get(position) ?: (list?.get(
                     position
                 )
-                    ?: Any()))).javaClass}"
+                        ?: Any()))).javaClass
+                }"
             )
 
     private fun getType(position: Int) =

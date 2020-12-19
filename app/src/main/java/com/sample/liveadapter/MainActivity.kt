@@ -1,99 +1,99 @@
 package com.sample.liveadapter
 
-import androidx.lifecycle.MutableLiveData
-import androidx.databinding.DataBindingUtil
-import androidx.databinding.ObservableArrayList
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.LiveData
+import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.MutableLiveData
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.ravikoradiya.liveadapter.LiveAdapter
 import com.sample.liveadapter.databinding.ActivityMainBinding
 import com.sample.liveadapter.databinding.RowRvDataBinding
-import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mBinding: ActivityMainBinding
-    private var isLoading = false
+    lateinit var data: MutableLiveData<ArrayList<MyData>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mBinding = DataBindingUtil.setContentView<ActivityMainBinding>(this, R.layout.activity_main)
+        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         mBinding.rvTest.layoutManager = LinearLayoutManager(this)
 
-        mBinding.switch1.setOnCheckedChangeListener { compoundButton, b ->
-            if (b) setLiveData() else setObservableList()
-        }
-
+        createDummyData()
         setLiveData()
 
-    }
+        mBinding.btnAdd.setOnClickListener {
+            if (mBinding.position.text.trim().isNotEmpty()) {
+                val pos = mBinding.position.text.toString().toInt()
+                val size = data.value?.size ?: 0
+                val index = pos.coerceAtMost(size)
 
-    private fun setObservableList() {
-        val data = ObservableArrayList<MyData>()
-
-        for (i in 0..40) {
-            data.add(MyData("${1 + data.size}"))
+                val list = data.value
+                list?.add(index, MyData("${1 + index}"))
+                data.value = list
+            }
         }
 
-        LiveAdapter(data, BR.data)
-            .map<MyData, RowRvDataBinding>(R.layout.row_rv_data)
-            .into(mBinding.rvTest)
+        mBinding.btnDelete.setOnClickListener {
+            if (mBinding.position.text.trim().isNotEmpty()) {
+                val pos = mBinding.position.text.toString().toInt()
+                val size = data.value?.size ?: 0
+                val index = pos.coerceAtMost(size).coerceAtLeast(0)
 
-        mBinding.rvTest.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-
-                val layoutManager1 = recyclerView.layoutManager
-                if (layoutManager1 is LinearLayoutManager) {
-                    val lastItem = layoutManager1.findLastVisibleItemPosition()
-                    if (lastItem == (recyclerView.adapter?.itemCount ?: 0) - 1 && !isLoading) {
-                        isLoading = true
-                        for (i in 0..9) {
-                            val randomIndex = Random(System.currentTimeMillis()).nextInt(data.size)
-                            data.add(randomIndex, MyData("${1 + data.size}"))
-                        }
-                        isLoading = false
-                    }
-                }
+                val list = data.value
+                list?.removeAt(index)
+                data.value = list
             }
-        })
+        }
+
+        mBinding.btnChange.setOnClickListener {
+            if (mBinding.position.text.trim().isNotEmpty()) {
+                val pos = mBinding.position.text.toString().toInt()
+                val size = data.value?.size ?: 0
+                val index = pos.coerceAtMost(size).coerceAtLeast(0)
+
+                val list = data.value
+                list?.set(index, MyData("${1 + index} ${1 + index}"))
+                data.value = list
+            }
+        }
     }
 
-    private fun setLiveData() {
-        val data = MutableLiveData<ArrayList<MyData>>()
+    private fun createDummyData() {
+        data = MutableLiveData()
         data.value = ArrayList<MyData>()
         for (i in 0..40) {
             data.value?.add(MyData("${1 + (data.value?.size ?: 0)}"))
         }
+    }
 
-        LiveAdapter(data, BR.data)
+    private fun setLiveData() {
+
+        LiveAdapter(data, this@MainActivity, BR.data)
             .map<MyData, RowRvDataBinding>(R.layout.row_rv_data)
-            .into(mBinding.rvTest)
-
-        mBinding.rvTest.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-
-                val layoutManager1 = recyclerView.layoutManager
-                if (layoutManager1 is LinearLayoutManager) {
-                    val lastItem = layoutManager1.findLastVisibleItemPosition()
-                    if (lastItem == (recyclerView.adapter?.itemCount ?: 0) - 1 && !isLoading) {
-                        isLoading = true
-                        for (i in 0..9) {
-                            val add = data.value?.clone() as ArrayList<MyData>?
-                            val randomIndex = Random(System.currentTimeMillis()).nextInt(data.value?.size ?: 0)
-                            add?.add(randomIndex, MyData("${1 + (data.value?.size ?: 0)}"))
-                            data.value = add
-                        }
-                        isLoading = false
-                    }
+            .diffUtils(callback = object :DiffUtil.Callback(){
+                override fun getOldListSize(): Int {
+                    TODO("Not yet implemented")
                 }
-            }
-        })
+
+                override fun getNewListSize(): Int {
+                    TODO("Not yet implemented")
+                }
+
+                override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                    TODO("Not yet implemented")
+                }
+
+                override fun areContentsTheSame(
+                    oldItemPosition: Int,
+                    newItemPosition: Int
+                ): Boolean {
+                    TODO("Not yet implemented")
+                }
+
+            })
+            .into(mBinding.rvTest)
     }
 
     data class MyData(var text: String)
