@@ -1,33 +1,80 @@
 package com.ravikoradiya.liveadapter
 
-import androidx.lifecycle.LiveData
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableList
 import androidx.databinding.OnRebindCallback
 import androidx.databinding.ViewDataBinding
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import android.view.LayoutInflater
-import android.view.ViewGroup
+import com.ravikoradiya.extendedlivedata.ExtendedLiveData
 
 class LiveAdapter private constructor(
-    private val data: LiveData<out List<Any>>?,
+    private val _data: LiveData<out List<Any>>?,
+    private val lifecycleOwner: LifecycleOwner?,
     private val list: List<Any>?,
     private val variable: Int?,
     private val stableIds: Boolean?
 ) : RecyclerView.Adapter<Holder<ViewDataBinding>>() {
 
-    constructor(list: List<Any>?) : this(null, list, null, false)
-    constructor(list: List<Any>?, variable: Int) : this(null, list, variable, false)
-    constructor(list: List<Any>?, stableIds: Boolean) : this(null, list, null, stableIds)
-    constructor(list: List<Any>?, variable: Int, stableIds: Boolean) : this(null, list, variable, stableIds)
+    constructor(list: List<Any>?) : this(null, null, list, null, false)
+    constructor(list: List<Any>?, variable: Int) : this(null, null, list, variable, false)
+    constructor(list: List<Any>?, stableIds: Boolean) : this(null, null, list, null, stableIds)
+    constructor(list: List<Any>?, variable: Int, stableIds: Boolean) : this(
+        null,
+        null,
+        list,
+        variable,
+        stableIds
+    )
 
-    constructor(data: LiveData<out List<Any>>?) : this(data, null, null, false)
-    constructor(data: LiveData<out List<Any>>?, variable: Int) : this(data, null, variable, false)
-    constructor(data: LiveData<out List<Any>>?, stableIds: Boolean) : this(data, null, null, stableIds)
-    constructor(data: LiveData<out List<Any>>?, variable: Int, stableIds: Boolean) : this(data, null, variable, stableIds)
+    constructor(data: LiveData<out List<Any>>, lifecycleOwner: LifecycleOwner) : this(
+        data,
+        lifecycleOwner,
+        null,
+        null,
+        false
+    )
 
+    constructor(
+        data: LiveData<out List<Any>>, lifecycleOwner: LifecycleOwner, variable: Int
+    ) : this(
+        data,
+        lifecycleOwner,
+        null, variable, false
+    )
+
+    constructor(
+        data: LiveData<out List<Any>>, lifecycleOwner: LifecycleOwner, stableIds: Boolean
+    ) : this(
+        data,
+        lifecycleOwner,
+        null,
+        null,
+        stableIds
+    )
+
+    constructor(
+        data: LiveData<out List<Any>>,
+        lifecycleOwner: LifecycleOwner,
+        variable: Int,
+        stableIds: Boolean
+    ) : this(
+        data,
+        lifecycleOwner,
+        null,
+        variable,
+        stableIds
+    )
+
+    private var data: ExtendedLiveData<List<Any>>? = null
     private val DATA_INVALIDATION = Any()
-    private val liveListCallback = LiveListCallback(this)
+    private var diffUtilCallback: DiffUtil.ItemCallback<Any>? = null
+    private val liveListCallback = LiveListCallback(this, diffUtilCallback)
     private val observableListCallback = ObservableListCallback(this)
     private var recyclerView: RecyclerView? = null
     private lateinit var inflater: LayoutInflater
@@ -37,6 +84,12 @@ class LiveAdapter private constructor(
     private var typeHandler: TypeHandler? = null
 
     init {
+        if (_data != null && lifecycleOwner != null) {
+            data = ExtendedLiveData(_data.value.orEmpty())
+            _data.observe(lifecycleOwner, Observer {
+                data?.value = it.map { value -> value }
+            })
+        }
         setHasStableIds(stableIds ?: false)
     }
 
@@ -44,7 +97,8 @@ class LiveAdapter private constructor(
     fun <T : Any> map(clazz: Class<T>, layout: Int, variable: Int? = null) =
         apply { map[clazz] = BaseType(layout, variable) }
 
-    inline fun <reified T : Any> map(layout: Int, variable: Int? = null) = map(T::class.java, layout, variable)
+    inline fun <reified T : Any> map(layout: Int, variable: Int? = null) =
+        map(T::class.java, layout, variable)
 
     fun <T : Any> map(clazz: Class<T>, type: AbsType<*>) = apply { map[clazz] = type }
 
@@ -76,6 +130,8 @@ class LiveAdapter private constructor(
         override fun getItemType(item: Any, position: Int) = f(item, position)
     })
 
+    fun diffUtils(callback: DiffUtil.ItemCallback<Any>) = apply { diffUtilCallback = callback }
+
     fun into(recyclerView: RecyclerView) = apply { recyclerView.adapter = this }
 
 
@@ -83,7 +139,9 @@ class LiveAdapter private constructor(
         val binding = DataBindingUtil.inflate<ViewDataBinding>(inflater, viewType, view, false)
         val holder = Holder(binding)
         binding.addOnRebindCallback(object : OnRebindCallback<ViewDataBinding>() {
-            override fun onPreBind(binding: ViewDataBinding) = recyclerView?.isComputingLayout ?: false
+            override fun onPreBind(binding: ViewDataBinding) =
+                recyclerView?.isComputingLayout ?: false
+
             override fun onCanceled(binding: ViewDataBinding) {
                 if (recyclerView?.isComputingLayout ?: true) {
                     return
@@ -99,7 +157,10 @@ class LiveAdapter private constructor(
 
     override fun onBindViewHolder(holder: Holder<ViewDataBinding>, position: Int) {
         val type = getType(position)!!
-        holder.binding.setVariable(getVariable(type), data?.value?.get(position) ?: list?.get(position))
+        holder.binding.setVariable(
+            getVariable(type),
+            data?.value?.get(position) ?: list?.get(position)
+        )
         holder.binding.executePendingBindings()
         @Suppress("UNCHECKED_CAST")
         if (type is AbsType<*>) {
@@ -110,7 +171,11 @@ class LiveAdapter private constructor(
         }
     }
 
-    override fun onBindViewHolder(holder: Holder<ViewDataBinding>, position: Int, payloads: List<Any>) {
+    override fun onBindViewHolder(
+        holder: Holder<ViewDataBinding>,
+        position: Int,
+        payloads: List<Any>
+    ) {
         if (isForDataBinding(payloads)) {
             holder.binding.executePendingBindings()
         } else {
@@ -120,7 +185,9 @@ class LiveAdapter private constructor(
 
     override fun onViewRecycled(holder: Holder<ViewDataBinding>) {
         val position = holder.adapterPosition
-        if (position != RecyclerView.NO_POSITION && position < ((data?.value?.size) ?: (list?.size ?: 0))) {
+        if (position != RecyclerView.NO_POSITION && position < ((data?.value?.size) ?: (list?.size
+                ?: 0))
+        ) {
             val type = getType(position)!!
             if (type is AbsType<*>) {
                 @Suppress("UNCHECKED_CAST")
@@ -142,13 +209,19 @@ class LiveAdapter private constructor(
         }
     }
 
-    override fun getItemCount() = ((data?.value?.size) ?: (list?.size ?: 0))
+    override fun getItemCount(): Int {
+        return if (data != null && lifecycleOwner != null) {
+            liveListCallback.getItemCount()
+        } else {
+            list?.size ?: 0
+        }
+    }
 
     override fun onAttachedToRecyclerView(rv: RecyclerView) {
         if (recyclerView == null) {
-            data?.observeForever(liveListCallback)
-
-            if (list is ObservableList?)
+            if (data != null && lifecycleOwner != null)
+                data?.observe(lifecycleOwner, liveListCallback)
+            else if (list is ObservableList?)
                 list?.addOnListChangedCallback(observableListCallback)
         }
         recyclerView = rv
@@ -166,19 +239,27 @@ class LiveAdapter private constructor(
     }
 
     override fun getItemViewType(position: Int) =
-        layoutHandler?.getItemLayout((data?.value?.get(position) ?: (list?.get(position) ?: Any())), position)
+        layoutHandler?.getItemLayout(
+            (data?.value?.get(position) ?: (list?.get(position) ?: Any())),
+            position
+        )
             ?: typeHandler?.getItemType(
                 (data?.value?.get(position) ?: (list?.get(position) ?: Any())),
                 position
             )?.layout
             ?: getType(position)?.layout
             ?: throw RuntimeException(
-                "Invalid object at position $position: ${((data?.value?.get(position) ?: (list?.get(position)
-                    ?: Any()))).javaClass}"
+                "Invalid object at position $position: ${
+                    ((data?.value?.get(position) ?: (list?.get(position)
+                        ?: Any()))).javaClass
+                }"
             )
 
     private fun getType(position: Int) =
-        typeHandler?.getItemType((data?.value?.get(position) ?: (list?.get(position) ?: Any())), position)
+        typeHandler?.getItemType(
+            (data?.value?.get(position) ?: (list?.get(position) ?: Any())),
+            position
+        )
             ?: map[((data?.value?.get(position) ?: (list?.get(position) ?: Any()))).javaClass]
 
     private fun getVariable(type: BaseType) = type.variable
