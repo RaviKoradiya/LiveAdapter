@@ -32,7 +32,7 @@ class ObservableListCallback<H : RecyclerView.ViewHolder>(adapter: RecyclerView.
     }
 
     override fun onItemRangeMoved(list: ObservableList<Any>, from: Int, to: Int, count: Int) {
-        adapter?.let { for (i in 0..count - 1) it.notifyItemMoved(from + i, to + i) }
+        adapter?.let { for (i in 0 until count) it.notifyItemMoved(from + i, to + i) }
     }
 
 }

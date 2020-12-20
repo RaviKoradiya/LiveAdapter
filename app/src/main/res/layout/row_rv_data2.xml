@@ -4,7 +4,7 @@
 
         <variable
             name="data"
-            type="com.sample.liveadapter.MainActivity.MyData" />
+            type="com.sample.liveadapter.MainActivity.MyData2" />
     </data>
 
     <androidx.cardview.widget.CardView
@@ -21,7 +21,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="8dp"
-                android:text='@{String.valueOf("Item1 | "+ data.text)}' />
+                android:text='@{String.valueOf("Item2 | "+ data.text)}' />
 
             <TextView
                 android:layout_width="match_parent"

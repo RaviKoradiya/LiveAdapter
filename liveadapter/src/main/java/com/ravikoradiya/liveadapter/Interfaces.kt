@@ -13,3 +13,7 @@ interface LayoutHandler : Handler {
 interface StableId {
     val stableId: Long
 }
+
+interface DiffCallback {
+    fun areDataSame(old: Any, new: Any): Boolean
+}
