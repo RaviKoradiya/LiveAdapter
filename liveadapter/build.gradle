@@ -2,6 +2,10 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
+apply plugin: 'com.github.dcendents.android-maven'
+
+group='com.github.RaviKoradiya'
+
 android {
     compileSdkVersion 29
     buildToolsVersion '28.0.3'
