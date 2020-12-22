@@ -1,5 +1,6 @@
 [![JitPack](https://jitpack.io/v/RaviKoradiya/LiveAdapter.svg)](https://jitpack.io/#RaviKoradiya/LiveAdapter) 
-[![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-LiveAdapter-blue.svg?style=flat)](https://android-arsenal.com/details/1/8210)
+[![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://opensource.org/licenses/Apache-2.0)
 
 
 
@@ -150,7 +151,7 @@ LiveAdapter(listOfItems, BR.item).layout { item, position ->
 
 ## Acknowledgments
 
-Thanks to **Miguel Ángel Moreno** for [this talk](https://github.com/nitrico/LastAdapter).
+Thanks to **Miguel Ángel Moreno** for [this library](https://github.com/nitrico/LastAdapter).
 
 
 ## Author
