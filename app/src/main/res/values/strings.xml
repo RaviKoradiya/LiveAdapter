@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">LiveAdapterSample</string>
     <string name="title_activity_sample">SampleActivity</string>
+    <string name="no_data_found">No Data Found</string>
+    <string name="menu_livedata_vs_observablelist">LiveData vs ObservableList</string>
+    <string name="menu_room_and_livedata">Room and LiveData</string>
 </resources>

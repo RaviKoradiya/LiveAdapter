@@ -4,7 +4,7 @@
 
         <variable
             name="data"
-            type="com.sample.liveadapter.MainActivity.MyData2" />
+            type="com.sample.liveadapter.ui.LiveDataVsObservableListActivity.MyData2" />
     </data>
 
     <androidx.cardview.widget.CardView

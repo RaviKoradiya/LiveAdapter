@@ -8,7 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 
 class LiveListCallback(
     adapter: RecyclerView.Adapter<Holder<ViewDataBinding>>,
-    diffCallback: DiffCallback
+    diffCallback: DiffCallback,
+    private var noDataCallback: ((isDataEmpty: Boolean) -> Unit)?
 ) : Observer<List<Any>> {
 
     private var mDiffer: AsyncListDiffer<Any>? = null
@@ -29,6 +30,10 @@ class LiveListCallback(
         })
     }
 
+    fun setNoDataCallback(noDataCallback: ((isDataEmpty: Boolean) -> Unit)?) {
+        this.noDataCallback = noDataCallback
+    }
+
     fun getItemCount(): Int {
         return mDiffer?.currentList.orEmpty().size
     }
@@ -39,5 +44,6 @@ class LiveListCallback(
 
     override fun onChanged(t: List<Any>) {
         mDiffer?.submitList(t.map { it })
+        noDataCallback?.invoke(t.isEmpty())
     }
 }

@@ -1,4 +1,4 @@
-package com.sample.liveadapter
+package com.sample.liveadapter.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -9,23 +9,28 @@ import androidx.databinding.ObservableBoolean
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ravikoradiya.liveadapter.LiveAdapter
-import com.sample.liveadapter.databinding.ActivityMainBinding
+import com.sample.liveadapter.BR
+import com.sample.liveadapter.R
+import com.sample.liveadapter.databinding.ActivityLivedataVsObservablelistBinding
+import com.sample.liveadapter.databinding.RowRvData2Binding
 import com.sample.liveadapter.databinding.RowRvDataBinding
 
-class MainActivity : AppCompatActivity() {
+class LiveDataVsObservableListActivity : AppCompatActivity() {
 
-    private lateinit var mBinding: ActivityMainBinding
+    private lateinit var mBinding: ActivityLivedataVsObservablelistBinding
     lateinit var data: MutableLiveData<ArrayList<Any>>
     lateinit var observableData: ObservableArrayList<Any>
     private val isLiveDataAttached = ObservableBoolean()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        mBinding =
+            DataBindingUtil.setContentView(this, R.layout.activity_livedata_vs_observablelist)
+
         mBinding.rvTest.layoutManager = LinearLayoutManager(this)
 
         isLiveDataAttached.addOnPropertyChangedCallback(object :
-                Observable.OnPropertyChangedCallback() {
+            Observable.OnPropertyChangedCallback() {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
                 if ((sender as ObservableBoolean).get()) {
                     createDummyData()
@@ -84,25 +89,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setLiveData() {
-        LiveAdapter(data, this@MainActivity, BR.data)
-                .map<MyData, RowRvDataBinding>(R.layout.row_rv_data) {
-                    areContentsTheSame { old, new ->
-                        return@areContentsTheSame old.id == new.id
-                    }
+        LiveAdapter(data, this@LiveDataVsObservableListActivity, BR.data)
+            .map<MyData, RowRvDataBinding>(R.layout.row_rv_data) {
+                areContentsTheSame { old, new ->
+                    return@areContentsTheSame old.id == new.id
                 }
-                .map<MyData2, RowRvDataBinding>(R.layout.row_rv_data2) {
-                    areContentsTheSame { old, new ->
-                        return@areContentsTheSame old.id == new.id
-                    }
+            }
+            .map<MyData2, RowRvData2Binding>(R.layout.row_rv_data2) {
+                areContentsTheSame { old, new ->
+                    return@areContentsTheSame old.id == new.id
                 }
-                .into(mBinding.rvTest)
+            }
+            .onNoData {
+
+            }
+            .into(mBinding.rvTest)
     }
 
     private fun setObservableData() {
         LiveAdapter(observableData, BR.data)
-                .map<MyData, RowRvDataBinding>(R.layout.row_rv_data)
-                .map<MyData2, RowRvDataBinding>(R.layout.row_rv_data2)
-                .into(mBinding.rvTest)
+            .map<MyData, RowRvDataBinding>(R.layout.row_rv_data)
+            .map<MyData2, RowRvData2Binding>(R.layout.row_rv_data2)
+            .into(mBinding.rvTest)
     }
 
     private fun getRandomData(id: Long): Any {
@@ -173,12 +181,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     data class MyData(
-            var id: Long,
-            var text: String
+        var id: Long,
+        var text: String
     )
 
     data class MyData2(
-            var id: Long,
-            var text: String
+        var id: Long,
+        var text: String
     )
 }

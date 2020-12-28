@@ -99,11 +99,13 @@ class LiveAdapter private constructor(
     }
 
     private val DATA_INVALIDATION = Any()
-    private val liveListCallback: LiveListCallback? = LiveListCallback(this, diffCallback)
-    private val observableListCallback = ObservableListCallback(this)
+    private var noDataCallback: ((isDataEmpty: Boolean) -> Unit)? = null
+    private val liveListCallback: LiveListCallback =
+        LiveListCallback(this, diffCallback, noDataCallback)
+    private val observableListCallback = ObservableListCallback(this, noDataCallback)
     private var recyclerView: RecyclerView? = null
-    private lateinit var inflater: LayoutInflater
 
+    private lateinit var inflater: LayoutInflater
     private val map = mutableMapOf<Class<*>, BaseType>()
     private var layoutHandler: LayoutHandler? = null
     private var typeHandler: TypeHandler? = null
@@ -132,6 +134,15 @@ class LiveAdapter private constructor(
         variable: Int? = null,
         noinline f: (Type<T, B>.() -> Unit)? = null
     ) = map(T::class.java, Type<T, B>(layout, variable).apply { f?.invoke(this) })
+
+    fun onNoData(
+        f: ((isDataEmpty: Boolean) -> Unit)? = null
+    ) = apply {
+        noDataCallback = f
+        liveListCallback.setNoDataCallback(noDataCallback)
+        observableListCallback.setNoDataCallback(noDataCallback)
+    }
+
 
     fun handler(handler: Handler) = apply {
         when (handler) {
