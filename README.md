@@ -1,4 +1,4 @@
-![LiveAdapter](readme\LiveAdapter.png)
+![LiveAdapter](readme/LiveAdapter.png)
 
 
 
@@ -52,7 +52,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.github.RaviKoradiya:LiveAdapter:1.3.2-1608532016'
+    implementation 'com.github.RaviKoradiya:LiveAdapter:1.3.3'
     // kapt 'com.android.databinding:compiler:GRADLE_PLUGIN_VERSION' // this line only for Kotlin projects
 }
 ```
