@@ -1,3 +1,7 @@
+![LiveAdapter](readme\LiveAdapter.png)
+
+
+
 [![JitPack](https://jitpack.io/v/RaviKoradiya/LiveAdapter.svg)](https://jitpack.io/#RaviKoradiya/LiveAdapter) 
 [![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-LiveAdapter-blue.svg?style=flat)](https://android-arsenal.com/details/1/8210)
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -62,7 +66,7 @@ Create your item layouts with `<layout>` as root:
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
 
     <data>
-        <variable name="item" type="com.github.RaviKoradiya:LiveAdapter.item.Header"/>
+        <variable name="item" type="com.github.RaviKoradiya.LiveAdapter.item.Header"/>
     </data>
     
     <TextView
@@ -98,25 +102,43 @@ The list of items can be an `ObservableList` or `LiveData<List>` if you want to 
 ##### LiveData<List<*>>
 
 ```kotlin
+// Kotlin sample
 LiveAdapter(
             data = liveListOfItems,
             lifecycleOwner = this@MainActivity,
             variable = BR.item )
-            .map<Header, ItemHeaderBinding>(R.layout.item_header) {
-                areContentsTheSame { old: Header, new: Header ->
-                    return@areContentsTheSame old.text == new.text
-                }
-            }
-            .map<Point, ItemPointBinding>(R.layout.item_point) {
-                areContentsTheSame { old: Point, new: Point ->
-                    return@areContentsTheSame old.id == new.id
-                }
-            }
-            .into(recyclerview)
+           .map<Header, ItemHeaderBinding>(R.layout.item_header) {
+               areContentsTheSame { old: Header, new: Header ->
+                   return@areContentsTheSame old.text == new.text
+               }
+           }
+           .map<Point, ItemPointBinding>(R.layout.item_point) {
+               areContentsTheSame { old: Point, new: Point ->
+                   return@areContentsTheSame old.id == new.id
+               }
+           }
+           .into(recyclerview)
 ```
 
 I suggest to implement `DiffUtil ItemCallback` while using `LiveData`.
 
+### NoDataCallback
+A callback to manage "no data text or image view" visiblity.
+
+```kotlin
+// Kotlin sample
+LiveAdapter(listOfItems, BR.item)
+           .map<Header> ...
+           .onNoData { noData ->
+               textNoDataFound.visibility =
+                   if (noData)
+                       View.VISIBLE
+                   else
+                       View.GONE
+           }
+           ...
+           .into(recyclerView)
+```
 
 ### LayoutHandler
 
