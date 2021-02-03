@@ -1,13 +1,13 @@
 package com.ravikoradiya.liveadapter
 
-import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewbinding.ViewBinding
 
-class LiveListCallback(
-    adapter: RecyclerView.Adapter<Holder<ViewDataBinding>>,
+class LiveListCallback<V:ViewBinding>(
+    adapter: RecyclerView.Adapter<Holder<V>>,
     diffCallback: DiffCallback,
     private var noDataCallback: ((isDataEmpty: Boolean) -> Unit)?
 ) : Observer<List<Any>> {

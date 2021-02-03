@@ -1,6 +1,7 @@
 package com.sample.liveadapter.ui
 
 import android.os.Bundle
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.Observable
@@ -99,6 +100,14 @@ class LiveDataVsObservableListActivity : AppCompatActivity() {
                 areContentsTheSame { old, new ->
                     return@areContentsTheSame old.id == new.id
                 }
+            }.map<String>(R.layout.item_menu) {
+                onBind {
+                    it.binding.getViewById<TextView>(R.id.menu_label)?.text = it.binding.data
+                }
+
+                areContentsTheSame { old, new ->
+                    return@areContentsTheSame old == new
+                }
             }
             .onNoData {
 
@@ -110,14 +119,25 @@ class LiveDataVsObservableListActivity : AppCompatActivity() {
         LiveAdapter(observableData, BR.data)
             .map<MyData, RowRvDataBinding>(R.layout.row_rv_data)
             .map<MyData2, RowRvData2Binding>(R.layout.row_rv_data2)
+            .map<String>(R.layout.item_menu) {
+                onBind {
+                    it.binding.getViewById<TextView>(R.id.menu_label)?.text = it.binding.data
+                }
+
+                areContentsTheSame { old, new ->
+                    return@areContentsTheSame old == new
+                }
+            }
             .into(mBinding.rvTest)
     }
 
     private fun getRandomData(id: Long): Any {
-        return if (id % 2 == 0L) {
+        return if (id % 3 == 0L) {
             MyData(id, "$id")
-        } else {
+        } else if (id % 3 == 1L) {
             MyData2(id, "$id")
+        } else {
+            "String: $id"
         }
     }
 

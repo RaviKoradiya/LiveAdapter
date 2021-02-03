@@ -9,6 +9,7 @@ import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewbinding.ViewBinding
 
 
 class LiveAdapter private constructor(
@@ -16,8 +17,9 @@ class LiveAdapter private constructor(
     private val lifecycleOwner: LifecycleOwner?,
     private val list: List<Any>?,
     private val variable: Int?,
-    private val stableIds: Boolean?
-) : RecyclerView.Adapter<Holder<ViewDataBinding>>() {
+    private val stableIds: Boolean?,
+    inline var isDataBinding: HashMap<Int, Boolean> = HashMap()
+) : RecyclerView.Adapter<Holder<ViewBinding>>() {
 
     constructor(list: List<Any>?) : this(null, null, list, null, false)
     constructor(list: List<Any>?, variable: Int) : this(null, null, list, variable, false)
@@ -85,6 +87,8 @@ class LiveAdapter private constructor(
         stableIds
     )
 
+    private val map = mutableMapOf<Class<*>, BaseType>()
+
     private val diffCallback = object : DiffCallback {
         override fun areDataSame(old: Any, new: Any): Boolean {
             val type = map[old.javaClass]
@@ -100,13 +104,12 @@ class LiveAdapter private constructor(
 
     private val DATA_INVALIDATION = Any()
     private var noDataCallback: ((isDataEmpty: Boolean) -> Unit)? = null
-    private val liveListCallback: LiveListCallback =
+    private val liveListCallback: LiveListCallback<ViewBinding> =
         LiveListCallback(this, diffCallback, noDataCallback)
     private val observableListCallback = ObservableListCallback(this, noDataCallback)
     private var recyclerView: RecyclerView? = null
 
     private lateinit var inflater: LayoutInflater
-    private val map = mutableMapOf<Class<*>, BaseType>()
     private var layoutHandler: LayoutHandler? = null
     private var typeHandler: TypeHandler? = null
 
@@ -133,7 +136,16 @@ class LiveAdapter private constructor(
         layout: Int,
         variable: Int? = null,
         noinline f: (Type<T, B>.() -> Unit)? = null
-    ) = map(T::class.java, Type<T, B>(layout, variable).apply { f?.invoke(this) })
+    ) = map(T::class.java, Type<T, B>(layout, variable).apply {
+        isDataBinding[layout] = true
+        f?.invoke(this)
+    })
+
+
+    inline fun <reified T : Any> map(
+        layout: Int,
+        noinline f: (Type<T, RKViewBinding<T>>.() -> Unit)? = null
+    ) = map(T::class.java, Type<T, RKViewBinding<T>>(layout).apply { f?.invoke(this) })
 
     fun onNoData(
         f: ((isDataEmpty: Boolean) -> Unit)? = null
@@ -166,27 +178,33 @@ class LiveAdapter private constructor(
 
     fun into(recyclerView: RecyclerView) = apply { recyclerView.adapter = this }
 
-    override fun onCreateViewHolder(view: ViewGroup, viewType: Int): Holder<ViewDataBinding> {
-        val binding = DataBindingUtil.inflate<ViewDataBinding>(inflater, viewType, view, false)
-        val holder = Holder(binding)
-        binding.addOnRebindCallback(object : OnRebindCallback<ViewDataBinding>() {
-            override fun onPreBind(binding: ViewDataBinding) =
-                recyclerView?.isComputingLayout ?: false
+    override fun onCreateViewHolder(view: ViewGroup, viewType: Int): Holder<ViewBinding> {
 
-            override fun onCanceled(binding: ViewDataBinding) {
-                if (recyclerView?.isComputingLayout != false) {
-                    return
+        if (isDataBinding[viewType] == true) {
+            val binding = DataBindingUtil.inflate<ViewDataBinding>(inflater, viewType, view, false)
+            val holder = Holder(binding as ViewBinding)
+            binding.addOnRebindCallback(object : OnRebindCallback<ViewDataBinding>() {
+                override fun onPreBind(binding: ViewDataBinding) =
+                    recyclerView?.isComputingLayout ?: false
+
+                override fun onCanceled(binding: ViewDataBinding) {
+                    if (recyclerView?.isComputingLayout != false) {
+                        return
+                    }
+                    val position = holder.absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        notifyItemChanged(position, DATA_INVALIDATION)
+                    }
                 }
-                val position = holder.adapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    notifyItemChanged(position, DATA_INVALIDATION)
-                }
-            }
-        })
-        return holder
+            })
+            return holder
+        } else {
+            val viewBinding = inflater.inflate(viewType, view, false)
+            return Holder(RKViewBinding<Any>(viewBinding))
+        }
     }
 
-    override fun onBindViewHolder(holder: Holder<ViewDataBinding>, position: Int) {
+    override fun onBindViewHolder(holder: Holder<ViewBinding>, position: Int) {
         val type = getType(position)!!
 
         val value = if (data != null && lifecycleOwner != null) {
@@ -195,40 +213,44 @@ class LiveAdapter private constructor(
             list?.get(position)
         }
 
-        holder.binding.setVariable(
-            getVariable(type),
-            value
-        )
-        holder.binding.executePendingBindings()
+        if (holder.binding is ViewDataBinding) {
+            holder.binding.setVariable(
+                getVariable(type),
+                value
+            )
+            holder.binding.executePendingBindings()
+        } else if (holder.binding is RKViewBinding<*>) {
+            holder.binding.putData(value)
+        }
         @Suppress("UNCHECKED_CAST")
         if (type is AbsType<*, *>) {
             if (!holder.created) {
-                notifyCreate(holder, type as AbsType<*, ViewDataBinding>)
+                notifyCreate(holder, type as AbsType<*, ViewBinding>)
             }
-            notifyBind(holder, type as AbsType<*, ViewDataBinding>)
+            notifyBind(holder, type as AbsType<*, ViewBinding>)
         }
     }
 
     override fun onBindViewHolder(
-        holder: Holder<ViewDataBinding>,
+        holder: Holder<ViewBinding>,
         position: Int,
         payloads: List<Any>
     ) {
-        if (isForDataBinding(payloads)) {
+        if (isForDataBinding(payloads) && holder.binding is ViewDataBinding) {
             holder.binding.executePendingBindings()
         } else {
             super.onBindViewHolder(holder, position, payloads)
         }
     }
 
-    override fun onViewRecycled(holder: Holder<ViewDataBinding>) {
-        val position = holder.adapterPosition
+    override fun onViewRecycled(holder: Holder<ViewBinding>) {
+        val position = holder.absoluteAdapterPosition
         if (position != RecyclerView.NO_POSITION && position < itemCount
         ) {
             val type = getType(position)!!
             if (type is AbsType<*, *>) {
                 @Suppress("UNCHECKED_CAST")
-                notifyRecycle(holder, type as AbsType<*, ViewDataBinding>)
+                notifyRecycle(holder, type as AbsType<*, ViewBinding>)
             }
         }
     }
@@ -333,7 +355,7 @@ class LiveAdapter private constructor(
         return true
     }
 
-    private fun notifyCreate(holder: Holder<ViewDataBinding>, type: AbsType<*, ViewDataBinding>) {
+    private fun <V : ViewBinding> notifyCreate(holder: Holder<V>, type: AbsType<*, V>) {
         when (type) {
             is Type -> {
                 setClickListeners(holder, type)
@@ -344,21 +366,24 @@ class LiveAdapter private constructor(
         holder.created = true
     }
 
-    private fun notifyBind(holder: Holder<ViewDataBinding>, type: AbsType<*, ViewDataBinding>) {
+    private fun <V : ViewBinding> notifyBind(
+        holder: Holder<V>,
+        type: AbsType<*, V>
+    ) {
         when (type) {
             is Type -> type.onBind?.invoke(holder)
             is ItemType -> type.onBind(holder)
         }
     }
 
-    private fun notifyRecycle(holder: Holder<ViewDataBinding>, type: AbsType<*, ViewDataBinding>) {
+    private fun notifyRecycle(holder: Holder<ViewBinding>, type: AbsType<*, ViewBinding>) {
         when (type) {
             is Type -> type.onRecycle?.invoke(holder)
             is ItemType -> type.onRecycle(holder)
         }
     }
 
-    private fun setClickListeners(holder: Holder<ViewDataBinding>, type: Type<*, ViewDataBinding>) {
+    private fun <V : ViewBinding> setClickListeners(holder: Holder<V>, type: Type<*, V>) {
         val onClick = type.onClick
         if (onClick != null) {
             holder.itemView.setOnClickListener {

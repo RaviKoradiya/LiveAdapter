@@ -1,15 +1,15 @@
 package com.ravikoradiya.liveadapter
 
-import androidx.databinding.ViewDataBinding
+import androidx.viewbinding.ViewBinding
 
 open class BaseType
 @JvmOverloads constructor(open val layout: Int, open val variable: Int? = null)
 
 @Suppress("unused")
-abstract class AbsType<T, B : ViewDataBinding>
+abstract class AbsType<T, B : ViewBinding>
 @JvmOverloads constructor(layout: Int, variable: Int? = null) : BaseType(layout, variable)
 
-open class ItemType<T, B : ViewDataBinding>
+open class ItemType<T, B : ViewBinding>
 @JvmOverloads constructor(layout: Int, variable: Int? = null) : AbsType<T, B>(layout, variable) {
     open fun onCreate(holder: Holder<B>) {}
     open fun onBind(holder: Holder<B>) {}
@@ -19,7 +19,7 @@ open class ItemType<T, B : ViewDataBinding>
     }
 }
 
-open class Type<T, B : ViewDataBinding>
+open class Type<T, B : ViewBinding>
 @JvmOverloads constructor(layout: Int, variable: Int? = null) : AbsType<T, B>(layout, variable) {
     internal var onCreate: Action<B>? = null; private set
     internal var onBind: Action<B>? = null; private set
