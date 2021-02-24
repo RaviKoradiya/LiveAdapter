@@ -96,6 +96,17 @@ class LiveAdapter private constructor(
                 else -> false
             }
         }
+
+        override fun areItemSame(old: Any, new: Any): Boolean {
+            val type = map[old.javaClass]
+
+            return when (type) {
+                is Type<*, *> -> type.areItemSame?.invoke(old, new)
+                    ?: (old == new)
+                is ItemType<*, *> -> type.areItemSame(old, new) ?: (old == new)
+                else -> false
+            }
+        }
     }
 
     private val DATA_INVALIDATION = Any()
@@ -381,4 +392,8 @@ private fun <P1, R1> (((P1, P1) -> R1)?).invoke(old: Any, new: Any): R1? {
 
 private fun <T> ItemType<T, *>.areContentsTheSame(old: Any, new: Any): Boolean {
     return areContentsTheSame(old as T, new as T)
+}
+
+private fun <T> ItemType<T, *>.areItemSame(old: Any, new: Any): Boolean {
+    return areItemSame(old as T, new as T)
 }

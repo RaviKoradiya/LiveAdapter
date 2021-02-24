@@ -14,6 +14,9 @@ open class ItemType<T, B : ViewDataBinding>
     open fun onCreate(holder: Holder<B>) {}
     open fun onBind(holder: Holder<B>) {}
     open fun onRecycle(holder: Holder<B>) {}
+    open fun areItemSame(old: T, new: T): Boolean {
+        return old == new
+    }
     open fun areContentsTheSame(old: T, new: T): Boolean {
         return old == new
     }
@@ -27,11 +30,14 @@ open class Type<T, B : ViewDataBinding>
     internal var onLongClick: Action<B>? = null; private set
     internal var onRecycle: Action<B>? = null; private set
     internal var areContentsTheSame: ActionCompare<T>? = null; private set
+    internal var areItemSame: ActionCompare<T>? = null; private set
     fun onCreate(action: Action<B>?) = apply { onCreate = action }
     fun onBind(action: Action<B>?) = apply { onBind = action }
     fun onClick(action: Action<B>?) = apply { onClick = action }
     fun onLongClick(action: Action<B>?) = apply { onLongClick = action }
     fun onRecycle(action: Action<B>?) = apply { onRecycle = action }
+    fun areItemSame(action: ActionCompare<T>?) =
+        apply { areItemSame = action }
     fun areContentsTheSame(action: ActionCompare<T>?) =
         apply { areContentsTheSame = action }
 }

@@ -16,4 +16,5 @@ interface StableId {
 
 interface DiffCallback {
     fun areDataSame(old: Any, new: Any): Boolean
+    fun areItemSame(old: Any, new: Any): Boolean
 }

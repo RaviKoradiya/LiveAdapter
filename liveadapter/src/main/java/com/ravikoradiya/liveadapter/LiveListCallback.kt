@@ -17,15 +17,11 @@ class LiveListCallback(
     init {
         mDiffer = AsyncListDiffer<Any>(adapter, object : ItemCallback<Any>() {
             override fun areItemsTheSame(oldItem: Any, newItem: Any): Boolean {
-                return oldItem == newItem
+                return diffCallback.areItemSame(oldItem, newItem)
             }
 
             override fun areContentsTheSame(oldItem: Any, newItem: Any): Boolean {
-                return if (oldItem.javaClass != newItem.javaClass) {
-                    false
-                } else {
-                    diffCallback.areDataSame(oldItem, newItem)
-                }
+                return diffCallback.areDataSame(oldItem, newItem)
             }
         })
     }
