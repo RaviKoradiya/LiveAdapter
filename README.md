@@ -52,7 +52,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.github.RaviKoradiya:LiveAdapter:1.3.3'
+    implementation 'com.github.RaviKoradiya:LiveAdapter:1.3.4'
     // kapt 'com.android.databinding:compiler:GRADLE_PLUGIN_VERSION' // this line only for Kotlin projects
 }
 ```
@@ -111,10 +111,16 @@ LiveAdapter(
                areContentsTheSame { old: Header, new: Header ->
                    return@areContentsTheSame old.text == new.text
                }
+               areItemSame { old: Header, new: Header ->
+                   return@areContentsTheSame old.text == new.text
+               }
            }
            .map<Point, ItemPointBinding>(R.layout.item_point) {
                areContentsTheSame { old: Point, new: Point ->
                    return@areContentsTheSame old.id == new.id
+               }
+               areItemSame { old: Header, new: Header ->
+                   return@areContentsTheSame old.text == new.text
                }
            }
            .into(recyclerview)
@@ -180,10 +186,10 @@ Thanks to **Miguel Ángel Moreno** for [this library](https://github.com/nitrico
 
 #### Ravi Koradiya
 
-I'm open to new job positions - Contact me!
+I'm open to new challenging work - Hire me!
 
-|[Email](mailto:koradiyaravi@gmail.com)|[Facebook](https://www.facebook.com/ravikoradiya)|[Linked.in](https://www.linkedin.com/in/ravikoradiya)|[Twitter](https://twitter.com/Ravi_Koradiya/)
-|---|---|---|---|
+|[Email](mailto:koradiyaravi@gmail.com)|[Upwork](https://www.upwork.com/freelancers/ravik)|[LinkedIn](https://www.linkedin.com/in/ravikoradiya)| [Facebook](https://www.facebook.com/ravikoradiya) |[Twitter](https://twitter.com/Ravi_Koradiya/) |
+|:-:|:-:|:-:|:-:|:-:|
 
 
 ## License
