@@ -87,25 +87,31 @@ class LiveAdapter private constructor(
 
     private val diffCallback = object : DiffCallback {
         override fun areDataSame(old: Any, new: Any): Boolean {
-            val type = map[old.javaClass]
+            val typeOld = map[old.javaClass]
+            val typeNew = map[new.javaClass]
 
-            return when (type) {
-                is Type<*, *> -> type.areContentsTheSame?.invoke(old, new)
-                    ?: (old == new)
-                is ItemType<*, *> -> type.areContentsTheSame(old, new) ?: (old == new)
-                else -> false
-            }
+            return if (typeOld == typeNew)
+                when (typeOld) {
+                    is Type<*, *> -> typeOld.areContentsTheSame?.invoke(old, new)
+                        ?: (old == new)
+                    is ItemType<*, *> -> typeOld.areContentsTheSame(old, new) ?: (old == new)
+                    else -> false
+                }
+            else false
         }
 
         override fun areItemSame(old: Any, new: Any): Boolean {
-            val type = map[old.javaClass]
+            val typeOld = map[old.javaClass]
+            val typeNew = map[new.javaClass]
 
-            return when (type) {
-                is Type<*, *> -> type.areItemSame?.invoke(old, new)
-                    ?: (old == new)
-                is ItemType<*, *> -> type.areItemSame(old, new) ?: (old == new)
-                else -> false
-            }
+            return if (typeOld == typeNew)
+                when (typeOld) {
+                    is Type<*, *> -> typeOld.areItemSame?.invoke(old, new)
+                        ?: (old == new)
+                    is ItemType<*, *> -> typeOld.areItemSame(old, new) ?: (old == new)
+                    else -> false
+                }
+            else false
         }
     }
 
